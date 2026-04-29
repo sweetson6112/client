@@ -1,7 +1,6 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
-import pdfplumber
 import os
 
 app = FastAPI()
@@ -17,12 +16,21 @@ app.add_middleware(
 LATEST_DATA = {}
 
 def extract_text(pdf_path):
+    try:
+        import pdfplumber
+    except ImportError:
+        return "Error: pdfplumber not installed"
+
     text = ""
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            t = page.extract_text()
-            if t:
-                text += t + "\n"
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                t = page.extract_text()
+                if t:
+                    text += t + "\n"
+    except Exception as e:
+        return f"Error reading PDF: {str(e)}"
+
     return text
 
 def parse_ooc_pdf(pdf_path):
