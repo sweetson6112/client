@@ -1,8 +1,8 @@
-
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile
 import pdfplumber
+import os
 
 app = FastAPI()
 
@@ -38,8 +38,16 @@ async def upload(file: UploadFile):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(await file.read())
         pdf_path = tmp.name
+
     LATEST_DATA = parse_ooc_pdf(pdf_path)
+
+    os.remove(pdf_path)  # cleanup temp file
+
     return {"status": "success"}
+
+@app.get("/")
+def root():
+    return {"message": "API is running"}
 
 @app.get("/data")
 def get_data():
